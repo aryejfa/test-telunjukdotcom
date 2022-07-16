@@ -3,7 +3,7 @@ import "react-multi-carousel/lib/styles.css";
 import Container from "../src/components/container";
 import Layout from "../src/components/layout";
 
-export default function Tas2() {
+export default function Task2() {
   const { locale } = useRouter();
 
   return (

@@ -11,12 +11,27 @@ import React, {
 import Container from "../src/components/container";
 import Layout from "../src/components/layout";
 import { MyContext } from "../src/contexts/Context";
+import ReactPaginate from "react-paginate";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/outline";
 
-const FilterComponent = ({ filterText, onFilter }) => (
+const FilterComponent = ({ filterText, onFilter, onOrdering }) => (
   <>
-    <div className="relative text-gray-600 h-auto sm:w-[12rem] md:w-[15rem] xl:w-[20rem]">
+    <div className="flex">
+      <div className="absolute left-0 top-1.5 -ml-2 lg:ml-2">
+        <select
+          onChange={onOrdering}
+          className="border-2 border-gray-300 bg-white h-10 rounded-lg text-sm focus:outline-none"
+        >
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+      </div>
+    </div>
+    <div className="relative text-gray-600 h-auto  md:w-[15rem] lg:w-[20rem]">
       <input
-        className="sm:w-[12rem] md:w-[15rem] xl:w-[20rem] border-2 border-gray-300 bg-white h-10 pl-[1rem] pr-8 rounded-lg text-sm focus:outline-none"
+        className=" md:w-[15rem] lg:w-[20rem] border-2 border-gray-300 bg-white h-10 pl-[1rem] pr-8 rounded-lg text-sm focus:outline-none"
         type="search"
         name="search"
         value={filterText}
@@ -43,7 +58,7 @@ const FilterComponent = ({ filterText, onFilter }) => (
   </>
 );
 
-export default function Tas2() {
+export default function Task2() {
   const { locale } = useRouter();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -66,6 +81,50 @@ export default function Tas2() {
     setTotalRows(dataJson.total);
     setLoading(false);
   }, []);
+
+  const handlePerRowsChange = async (newPerPage, page) => {
+    fetchUsers(page, newPerPage);
+    setPerPage(newPerPage);
+  };
+
+  const subHeaderComponent = useMemo(() => {
+    return (
+      <FilterComponent
+        onFilter={(e) => setFilterText(e.target.value)}
+        filterText={filterText}
+        onOrdering={(val) =>
+          handlePerRowsChange(val.target.value, setCurrentPage(1))
+        }
+      />
+    );
+  }, [filterText]);
+
+  const CustomPagination = () => {
+    const count = Math.ceil(totalRows / perPage);
+    return (
+      <ReactPaginate
+        pageCount={count || 1}
+        forcePage={currentPage !== 0 ? currentPage - 1 : 0}
+        onPageChange={(page) => handlePagination(page)}
+        pageRangeDisplayed={2}
+        marginPagesDisplayed={1}
+        breakLabel={"..."}
+        breakClassName={"break-me"}
+        previousLabel={<ChevronLeftIcon className="h-5 w-5" />}
+        nextLabel={<ChevronRightIcon className="h-5 w-5" />}
+        containerClassName={"pagination"}
+        previousLinkClassName={"pagination__link"}
+        nextLinkClassName={"pagination__link"}
+        disabledClassName={"pagination__link--disabled"}
+        activeClassName={"pagination__link--active"}
+      />
+    );
+  };
+
+  const handlePagination = (page) => {
+    setCurrentPage(page.selected + 1);
+    fetchUsers(page.selected, perPage);
+  };
 
   const columns = useMemo(() => [
     {
@@ -99,25 +158,6 @@ export default function Tas2() {
     },
   ]);
 
-  const handlePageChange = (page) => {
-    fetchUsers(page);
-    setCurrentPage(page);
-  };
-
-  const handlePerRowsChange = async (newPerPage, page) => {
-    fetchUsers(page, newPerPage);
-    setPerPage(newPerPage);
-  };
-
-  const subHeaderComponent = useMemo(() => {
-    return (
-      <FilterComponent
-        onFilter={(e) => setFilterText(e.target.value)}
-        filterText={filterText}
-      />
-    );
-  }, [filterText]);
-
   return (
     <>
       <Layout pageTitle="Task 3">
@@ -140,20 +180,20 @@ export default function Tas2() {
             progressPending={loading}
             pagination
             paginationServer
-            paginationTotalRows={totalRows}
-            paginationDefaultPage={currentPage}
-            onChangeRowsPerPage={handlePerRowsChange}
-            onChangePage={handlePageChange}
-            onSelectedRowsChange={({ selectedRows }) =>
-              // console.log(selectedRows)
-              selectedRows
-            }
+            paginationComponent={CustomPagination}
             subHeader
             subHeaderComponent={subHeaderComponent}
             defaultSortFieldId="title"
             defaultSortAsc={true}
             striped
           />
+          <h5 className="text-center mb-1 text-sm">{`Row per page ${perPage} :  ${
+            Math.ceil(perPage * currentPage + 1) - perPage
+          } - ${
+            Math.ceil(totalRows / perPage) === currentPage
+              ? totalRows
+              : Math.ceil(perPage * currentPage)
+          } of ${totalRows}`}</h5>
         </Container>
       </Layout>
     </>
