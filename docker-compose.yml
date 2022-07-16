@@ -1,0 +1,19 @@
+version: "3.7"
+
+services:
+  my_app:
+    ports:
+      - 3000:3000
+    deploy:
+     resources:
+       limits:
+         cpus: "0.50"
+         memory: 4096M
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/root/dev/jp
+      - /root/dev/jp/node_modules
+      - /root/dev/jp/.next
+    restart: always
